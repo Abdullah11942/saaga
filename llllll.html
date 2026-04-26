@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Saaga — Kouvola</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --saaga-orange: #E8620A;
+  --saaga-dark: #1A1A1A;
+  --saaga-light: #FEF0E6;
+  --saaga-mid: #F5A06E;
+}
+body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f3; color: #1a1a1a; }
+
+/* NAV */
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; border-bottom: 3px solid var(--saaga-orange); background: var(--saaga-dark); }
+.logo-area { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 36px; height: 36px; background: var(--saaga-orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+.logo-text { display: flex; flex-direction: column; }
+.logo-main { font-size: 18px; font-weight: 700; color: var(--saaga-orange); letter-spacing: 2px; }
+.logo-sub { font-size: 10px; color: #aaa; letter-spacing: 0.5px; }
+.lang-group { display: flex; gap: 6px; }
+.lang-btn { font-size: 13px; padding: 4px 12px; border: 1px solid #555; background: transparent; border-radius: 8px; cursor: pointer; color: #ccc; }
+.lang-btn.active { background: var(--saaga-orange); color: #fff; border-color: transparent; }
+
+/* HERO */
+.hero { padding: 1rem 1.5rem; background: var(--saaga-light); border-bottom: 1px solid #f0d5c0; }
+.hero h1 { font-size: 18px; font-weight: 600; color: var(--saaga-dark); margin-bottom: 3px; }
+.hero p { font-size: 13px; color: #888; }
+
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid #e5e5e0; background: #fff; overflow-x: auto; }
+.tab { flex: 1; min-width: 70px; text-align: center; padding: 10px 4px; font-size: 12px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; background: transparent; border-top: none; border-left: none; border-right: none; white-space: nowrap; }
+.tab.active { color: var(--saaga-orange); border-bottom-color: var(--saaga-orange); font-weight: 600; }
+
+.main { padding: 1.25rem 1.5rem; max-width: 900px; margin: 0 auto; }
+
+/* CALENDAR */
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.month-nav { display: flex; align-items: center; gap: 10px; }
+.month-nav button { background: transparent; border: 1px solid #ccc; border-radius: 8px; padding: 4px 12px; cursor: pointer; font-size: 15px; }
+.month-label { font-size: 15px; font-weight: 500; min-width: 150px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.day-header { text-align: center; font-size: 11px; color: #888; padding: 5px 0; font-weight: 500; }
+.day-cell { border: 1px solid #e5e5e0; border-radius: 6px; background: #fff; min-height: 80px; display: flex; flex-direction: column; overflow: hidden; }
+.day-cell.other-month { opacity: 0.3; pointer-events: none; }
+.day-cell.today { border-color: var(--saaga-orange); }
+.day-num { font-size: 11px; color: #888; padding: 4px 5px 1px; flex-shrink: 0; }
+.day-cell.today .day-num { color: var(--saaga-orange); font-weight: 600; }
+.ev-pip { font-size: 10px; border-radius: 3px; padding: 1px 4px; margin: 0 4px 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.ev-pip.green { background: var(--saaga-orange); color: #fff; }
+.ev-pip.blue { background: #378ADD; color: #fff; }
+.day-note { width: 100%; border: none; background: transparent; font-size: 11px; color: #1a1a1a; font-family: inherit; resize: none; padding: 2px 5px 2px; outline: none; line-height: 1.4; flex: 1; }
+.day-note:focus { background: #fdf5f0; }
+.visitor-row { display: flex; align-items: center; gap: 3px; padding: 2px 4px 4px; flex-shrink: 0; }
+.visitor-label { font-size: 10px; color: #aaa; white-space: nowrap; }
+.visitor-input { width: 40px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; padding: 1px 4px; background: #fdf5f0; text-align: center; outline: none; }
+.visitor-input:disabled { opacity: 0.4; }
+.visitor-input:focus { border-color: var(--saaga-orange); }
+
+/* TOTAL BAR */
+.total-bar { margin-top: 1rem; border-radius: 12px; padding: 12px 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+.total-bar.orange { background: var(--saaga-light); }
+.total-bar.blue { background: #E6F1FB; }
+.total-bar.amber { background: #FAEEDA; }
+.total-label { font-size: 13px; }
+.total-num { font-size: 24px; font-weight: 600; }
+.total-sub { font-size: 12px; }
+
+.hint { font-size: 12px; color: #aaa; margin-top: 8px; text-align: center; }
+
+/* CARDS */
+.card-list { display: flex; flex-direction: column; gap: 10px; }
+.event-card { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 12px; }
+.date-box { border-radius: 8px; padding: 6px 10px; text-align: center; min-width: 44px; flex-shrink: 0; }
+.date-box.orange { background: var(--saaga-light); color: var(--saaga-orange); }
+.date-box.blue { background: #E6F1FB; color: #0C447C; }
+.date-box.amber { background: #FAEEDA; color: #633806; }
+.eday { font-size: 18px; font-weight: 600; display: block; }
+.emon { font-size: 11px; display: block; }
+.card-info { flex: 1; min-width: 0; }
+.card-info h3 { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.card-info p { font-size: 13px; color: #666; }
+.card-time { font-size: 12px; margin-top: 3px; }
+.card-time.orange { color: var(--saaga-orange); }
+.card-time.blue { color: #185FA5; }
+.card-time.amber { color: #854F0B; }
+.card-count { font-size: 12px; border-radius: 6px; padding: 2px 8px; margin-top: 4px; display: inline-block; }
+.card-count.blue { background: #E6F1FB; color: #0C447C; }
+.card-count.amber { background: #FAEEDA; color: #633806; }
+.del-btn { background: transparent; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; color: #aaa; font-size: 13px; padding: 3px 8px; flex-shrink: 0; }
+.del-btn:hover { color: #791F1F; border-color: #F09595; background: #FCEBEB; }
+.add-btn { display: inline-flex; align-items: center; gap: 6px; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; cursor: pointer; font-weight: 500; margin-top: 1rem; }
+.add-btn.orange { background: var(--saaga-orange); }
+.add-btn.blue { background: #378ADD; }
+.add-btn.amber { background: #854F0B; }
+
+/* EXPANDABLE */
+.expandable-card { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; overflow: hidden; }
+.expandable-header { padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.expandable-body { border-top: 1px solid #e5e5e0; padding: 1rem 1.25rem; display: none; }
+.expandable-body.open { display: block; }
+.person-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.person-row { display: flex; align-items: center; gap: 8px; background: #f9f9f7; border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.person-name { font-weight: 500; flex: 1; }
+.person-phone { color: #666; font-size: 12px; }
+.person-del { background: transparent; border: none; cursor: pointer; color: #ccc; font-size: 14px; padding: 0 4px; }
+.person-del:hover { color: #791F1F; }
+.add-person-form { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.add-person-form input { font-size: 13px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; flex: 1; min-width: 90px; outline: none; }
+.add-person-btn { color: #fff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.group-section { margin-bottom: 10px; border: 1px solid #e5e5e0; border-radius: 8px; overflow: hidden; }
+.group-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; }
+.group-body { padding: 8px 12px; display: none; }
+.group-add-btn { border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; margin-top: 4px; border: 1px solid; }
+.badge { font-size: 11px; border-radius: 6px; padding: 2px 7px; margin-left: 6px; }
+.no-items { font-size: 13px; color: #aaa; text-align: center; padding: 2rem 0; }
+.no-persons { font-size: 13px; color: #aaa; text-align: center; padding: 0.5rem 0; }
+
+
+
+/* PRINT */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; border: 1px solid #e5e5e0; padding: 1.5rem; width: 320px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 1rem; color: var(--saaga-dark); }
+.modal label { font-size: 12px; color: #666; display: block; margin: 10px 0 4px; }
+.modal input, .modal select { width: 100%; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; outline: none; background: #fff; }
+.modal input:focus, .modal select:focus { border-color: var(--saaga-orange); }
+.modal-btns { display: flex; gap: 8px; margin-top: 1rem; }
+.modal-btns button { flex: 1; padding: 9px; border-radius: 8px; font-size: 14px; cursor: pointer; border: none; }
+.btn-cancel { background: transparent; border: 1px solid #ccc !important; color: #666; }
+.btn-orange { background: var(--saaga-orange); color: #fff; font-weight: 600; }
+.btn-blue { background: #378ADD; color: #fff; font-weight: 600; }
+.btn-amber { background: #854F0B; color: #fff; font-weight: 600; }
+.save-ok { font-size: 12px; display: none; padding: 4px 12px; border-radius: 6px; }
+.save-ok.show { display: inline-block; }
+
+/* PRINT */
+@media print {
+  .nav, .tabs, .admin-bar, .overlay, .add-btn, .add-ev-area, .add-ret-area, .add-ryhma-area, .del-btn, .person-del, .add-person-form, .group-add-btn, .visitor-row, .day-note, .hint { display: none !important; }
+  body { background: #fff; }
+  .hero { background: #fff; border: none; padding: 0.5rem 0; }
+  .hero h1 { font-size: 16px; }
+  .main { padding: 0; }
+  .print-section { page-break-before: always; }
+  .print-section:first-child { page-break-before: avoid; }
+  .print-title { font-size: 14px; font-weight: 700; color: #E8620A; border-bottom: 2px solid #E8620A; padding-bottom: 4px; margin-bottom: 10px; }
+  .cal-grid { gap: 2px; }
+  .day-cell { min-height: 50px; border: 0.5px solid #ccc; border-radius: 3px; }
+  .expandable-body { display: block !important; }
+  .total-bar { border: 1px solid #ddd; }
+  .event-card, .expandable-card { border: 0.5px solid #ccc; margin-bottom: 6px; }
+  #view-cal, #view-ev, #view-ret, #view-ryhma, #view-km { display: none !important; }
+  #view-cal.print-active, #view-ev.print-active, #view-ret.print-active, #view-ryhma.print-active, #view-km.print-active { display: block !important; }
+  .tabs { display: none; }
+}
+
+@media (max-width: 600px) { .main { padding: 1rem; } .nav { padding: 0.75rem 1rem; } .hero { padding: 1rem; } .day-cell { min-height: 60px; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo-area">
+
+    <div class="logo-text">
+      <span class="logo-main">SAAGA</span>
+      <span class="logo-sub">Monikulttuurikeskus · Kouvola</span>
+    </div>
+  </div>
+  <div class="lang-group">
+    <button class="lang-btn active" onclick="setLang('fi',this)">FI</button>
+    <button class="lang-btn" onclick="setLang('en',this)">EN</button>
+  </div>
+</div>
+
+<div class="hero">
+  <h1 id="hero-title">Tapahtumakalenteri</h1>
+  <p id="hero-sub">Monikulttuurikeskus Saaga — Kouvola</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-cal" onclick="switchTab('cal')"><span id="tab-cal-label">Kalenteri</span></button>
+  <button class="tab" id="tab-ev" onclick="switchTab('ev')"><span id="tab-ev-label">Tapahtumat</span></button>
+  <button class="tab" id="tab-ret" onclick="switchTab('ret')"><span id="tab-ret-label">Retket</span></button>
+  <button class="tab" id="tab-ryhma" onclick="switchTab('ryhma')"><span id="tab-ryhma-label">Ryhmät</span></button>
+  <button class="tab" id="tab-km" onclick="switchTab('km')"><span id="tab-km-label">Km-korvaus</span></button>
+
+</div>
+
+<div class="main">
+
+  <!-- KALENTERI -->
+  <div id="view-cal">
+    <div class="cal-header">
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">&#8249;</button>
+        <span class="month-label" id="month-label"></span>
+        <button onclick="changeMonth(1)">&#8250;</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="total-bar orange" style="margin-top:1rem;">
+      <div>
+        <div class="total-label" id="total-label" style="color:var(--saaga-orange);"></div>
+        <div class="total-sub" id="total-sub" style="color:var(--saaga-mid);"></div>
+      </div>
+      <div class="total-num" id="total-num" style="color:var(--saaga-orange);">0</div>
+    </div>
+  </div>
+
+  <!-- TAPAHTUMAT -->
+  <div id="view-ev" style="display:none;">
+    <div class="card-list" id="events-list"></div>
+    <div id="add-ev-area" style="display:none;">
+      <button class="add-btn orange" onclick="openOverlay('add-ev-overlay')">+ <span id="add-ev-label">Lisää tapahtuma</span></button>
+    </div>
+    <p id="ev-hint" style="font-size:13px;color:#aaa;text-align:center;margin-top:1rem;"></p>
+  </div>
+
+  <!-- RETKET -->
+  <div id="view-ret" style="display:none;">
+    <div class="card-list" id="retki-list"></div>
+    <div id="add-ret-area" style="display:none;">
+      <button class="add-btn blue" onclick="openOverlay('add-ret-overlay')">+ <span id="add-ret-label">Lisää retki</span></button>
+    </div>
+    <p id="ret-hint" style="font-size:13px;color:#aaa;text-align:center;margin-top:1rem;"></p>
+    <div class="total-bar blue" id="ret-total-bar" style="display:none;">
+      <div>
+        <div class="total-label" id="ret-total-label" style="color:#0C447C;"></div>
+        <div class="total-sub" id="ret-total-sub" style="color:#185FA5;"></div>
+      </div>
+      <div class="total-num" id="ret-total-num" style="color:#0C447C;">0</div>
+    </div>
+  </div>
+
+  <!-- RYHMÄTOIMINTA -->
+  <div id="view-ryhma" style="display:none;">
+    <div class="card-list" id="ryhma-list"></div>
+    <div id="add-ryhma-area" style="display:none;">
+      <button class="add-btn amber" onclick="openAddGroupModal()">+ <span id="add-ryhma-label">Lisää ryhmä</span></button>
+    </div>
+    <p id="ryhma-hint" style="font-size:13px;color:#aaa;text-align:center;margin-top:1rem;"></p>
+    <div class="total-bar amber" id="ryhma-total-bar" style="display:none;">
+      <div>
+        <div class="total-label" id="ryhma-total-label" style="color:#633806;"></div>
+        <div class="total-sub" id="ryhma-total-sub" style="color:#854F0B;"></div>
+      </div>
+      <div class="total-num" id="ryhma-total-num" style="color:#633806;">0</div>
+    </div>
+  </div>
+
+
+
+  <!-- KM-KORVAUS -->
+  <div id="view-km" style="display:none;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
+      <select id="km-filter" onchange="renderKm()" style="font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;outline:none;flex:1;min-width:150px;">
+        <option value="">Kaikki kuljettajat</option>
+      </select>
+      <button class="add-btn orange" onclick="openOverlay('add-km-overlay')" style="margin:0;">+ Lisää matka</button>
+    </div>
+    <div class="card-list" id="km-list"></div>
+    <div class="total-bar orange" id="km-total-bar" style="display:none; margin-top:1rem;">
+      <div>
+        <div class="total-label" id="km-total-label" style="color:var(--saaga-orange);"></div>
+        <div class="total-sub" id="km-total-sub" style="color:var(--saaga-mid);"></div>
+      </div>
+      <div class="total-num" id="km-total-num" style="color:var(--saaga-orange);">0 €</div>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding: 6px;">
+    <span class="save-ok" id="save-ok"></span>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="add-km-overlay">
+  <div class="modal">
+    <h2>Uusi matka</h2>
+    <label>Kuljettaja</label>
+    <input type="text" id="km-driver" placeholder="Nimi" />
+    <label>Päivämäärä</label>
+    <input type="date" id="km-date" />
+    <label>Lähtöpaikka</label>
+    <input type="text" id="km-from" placeholder="Mistä" />
+    <label>Kohde</label>
+    <input type="text" id="km-to" placeholder="Minne" />
+    <label>Kilometrit</label>
+    <input type="number" id="km-km" min="0" placeholder="0" />
+    <label>Matkustajat (nimet, pilkulla erotettuna)</label>
+    <input type="text" id="km-passengers" placeholder="esim. Matti, Liisa" />
+    <div style="margin-top:10px;background:var(--saaga-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--saaga-orange);" id="km-preview"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('add-km-overlay')">Peruuta</button>
+      <button class="btn-orange" onclick="saveKm()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="add-ev-overlay">
+  <div class="modal">
+    <h2 id="add-ev-title">Uusi tapahtuma</h2>
+    <label id="lbl-ev-name">Tapahtuman nimi</label>
+    <input type="text" id="ev-name" />
+    <label id="lbl-ev-date">Päivämäärä</label>
+    <input type="date" id="ev-date" />
+    <label id="lbl-ev-time">Aika</label>
+    <input type="time" id="ev-time" />
+    <label id="lbl-ev-desc">Kuvaus</label>
+    <input type="text" id="ev-desc" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('add-ev-overlay')" id="ev-cancel">Peruuta</button>
+      <button class="btn-orange" onclick="saveEvent()" id="ev-save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="add-ret-overlay">
+  <div class="modal">
+    <h2 id="add-ret-title">Uusi retki</h2>
+    <label id="lbl-ret-name">Retken nimi</label>
+    <input type="text" id="ret-name" />
+    <label id="lbl-ret-date">Päivämäärä</label>
+    <input type="date" id="ret-date" />
+    <label id="lbl-ret-time">Aika</label>
+    <input type="time" id="ret-time" />
+    <label id="lbl-ret-dest">Kohde / Kuvaus</label>
+    <input type="text" id="ret-dest" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('add-ret-overlay')" id="ret-cancel">Peruuta</button>
+      <button class="btn-blue" onclick="saveRetki()" id="ret-save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="add-group-overlay">
+  <div class="modal">
+    <h2 id="add-group-title">Uusi ryhmä</h2>
+    <label id="lbl-group-name">Ryhmän nimi</label>
+    <input type="text" id="group-name" />
+    <div style="margin-top:14px;border-top:1px solid #e5e5e0;padding-top:12px;">
+      <p id="lbl-group-persons" style="font-size:12px;color:#666;margin-bottom:8px;">Lisää osallistujia (valinnainen)</p>
+      <div id="new-group-persons" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <input type="text" id="ng-firstname" style="flex:1;min-width:80px;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;outline:none;" />
+        <input type="text" id="ng-lastname" style="flex:1;min-width:80px;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;outline:none;" />
+        <input type="tel" id="ng-phone" style="flex:1;min-width:80px;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;outline:none;" />
+        <button onclick="addPersonToNewGroup()" style="background:#854F0B;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;">+</button>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeNewGroupModal()" id="group-cancel">Peruuta</button>
+      <button class="btn-amber" onclick="saveGroup()" id="group-save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const T = {
+  fi: {
+    title:"Tapahtumakalenteri", sub:"Monikulttuurikeskus Saaga — Kouvola",
+    tabCal:"Kalenteri", tabEv:"Tapahtumat", tabRet:"Retket", tabRyhma:"Ryhmät",
+    visitor:"Vierailija", admin:"Ylläpitäjä",
+    loginbtn:"Kirjaudu sisään", logoutbtn:"Kirjaudu ulos",
+    loginTitle:"Kirjaudu sisään", pwLabel:"Salasana", cancel:"Peruuta", wrongPw:"Väärä salasana",
+    hintGuest:"Kirjaudu sisään muokataksesi kalenteria",
+    hintAdmin:"Voit kirjoittaa muistiinpanoja ja merkitä kävijämäärät",
+    placeholder:"Muistiinpano...", visitorLabel:"Kävijät:",
+    totalLabel:"Kuukauden kävijät yhteensä",
+    addEv:"Lisää tapahtuma", newEv:"Uusi tapahtuma",
+    lEvName:"Tapahtuman nimi", lEvDate:"Päivämäärä", lEvTime:"Aika", lEvDesc:"Kuvaus",
+    save:"Tallenna", evHintGuest:"Kirjaudu sisään lisätäksesi tapahtumia", noEvents:"Ei tulevia tapahtumia",
+    addRet:"Lisää retki", newRet:"Uusi retki",
+    lRetName:"Retken nimi", lRetDate:"Päivämäärä", lRetTime:"Aika", lRetDest:"Kohde / Kuvaus",
+    retHintGuest:"Kirjaudu sisään lisätäksesi retkiä", noRetki:"Ei retkiä",
+    retTotal:"Kaikki retket yhteensä", retTotalSub:"osallistujaa kaikissa retkissä",
+    addRyhma:"Lisää ryhmä", newGroup:"Uusi ryhmä", lGroupName:"Ryhmän nimi",
+    ryhmaHintGuest:"Kirjaudu sisään lisätäksesi ryhmiä", noRyhma:"Ei ryhmiä",
+    ryhmaTotal:"Kaikki ryhmät yhteensä", ryhmaTotalSub:"osallistujaa kaikissa ryhmissä",
+    addGroup:"Lisää ryhmä", addPerson:"Lisää osallistujia (valinnainen)",
+    weekly:"Viikoittain", once:"Kertaluonteinen",
+    persons:"osallistujaa", groups:"ryhmää",
+    pFirstName:"Etunimi", pLastName:"Sukunimi", pPhone:"Puhelin",
+    noPersons:"Ei osallistujia vielä",
+    saveOk:"Tallennettu!",
+    days:["Ma","Ti","Ke","To","Pe","La","Su"],
+    months:["Tammikuu","Helmikuu","Maaliskuu","Huhtikuu","Toukokuu","Kesäkuu","Heinäkuu","Elokuu","Syyskuu","Lokakuu","Marraskuu","Joulukuu"],
+    shortMonths:["tam","hel","maa","huh","tou","kes","hei","elo","syy","lok","mar","jou"]
+  },
+  en: {
+    title:"Event Calendar", sub:"Multicultural Centre Saaga — Kouvola",
+    tabCal:"Calendar", tabEv:"Events", tabRet:"Trips", tabRyhma:"Groups",
+    visitor:"Guest", admin:"Admin",
+    loginbtn:"Sign in", logoutbtn:"Sign out",
+    loginTitle:"Sign in", pwLabel:"Password", cancel:"Cancel", wrongPw:"Wrong password",
+    hintGuest:"Sign in to edit the calendar",
+    hintAdmin:"You can write notes and enter visitor counts",
+    placeholder:"Note...", visitorLabel:"Visitors:",
+    totalLabel:"Total visitors this month",
+    addEv:"Add event", newEv:"New event",
+    lEvName:"Event name", lEvDate:"Date", lEvTime:"Time", lEvDesc:"Description",
+    save:"Save", evHintGuest:"Sign in to add events", noEvents:"No upcoming events",
+    addRet:"Add trip", newRet:"New trip",
+    lRetName:"Trip name", lRetDate:"Date", lRetTime:"Time", lRetDest:"Destination / Description",
+    retHintGuest:"Sign in to add trips", noRetki:"No trips",
+    retTotal:"All trips total", retTotalSub:"participants across all trips",
+    addRyhma:"Add group", newGroup:"New group", lGroupName:"Group name",
+    ryhmaHintGuest:"Sign in to add groups", noRyhma:"No groups",
+    ryhmaTotal:"All groups total", ryhmaTotalSub:"participants across all groups",
+    addGroup:"Add group", addPerson:"Add participants (optional)",
+    weekly:"Weekly", once:"One-time",
+    persons:"participants", groups:"groups",
+    pFirstName:"First name", pLastName:"Last name", pPhone:"Phone",
+    noPersons:"No participants yet",
+    saveOk:"Saved!",
+    days:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    months:["January","February","March","April","May","June","July","August","September","October","November","December"],
+    shortMonths:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+  }
+};
+
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXUzA8ce-SX16hq7SMEZzwg2EP6nNgNdvuL20BCjsX4SdquQ348crSQ728sJWftN9gYA/exec';
+const SECRET_TOKEN = 'saaga-kouvola-2024-xK9m';
+
+let lang='fi';
+const isAdmin=true;
+let viewYear=new Date().getFullYear(), viewMonth=new Date().getMonth();
+let notes={}, visitors={}, events=[], retket=[], ryhmat=[], kmkorvaus=[];
+let currentRyhmaId=null, newGroupPersons=[];
+let _saveTimeout=null;
+
+function showSyncStatus(msg, color){
+  const ok=document.getElementById('save-ok');
+  ok.textContent=msg;
+  ok.style.background=color==='red'?'#FCEBEB':color==='blue'?'#E6F1FB':'#E1F5EE';
+  ok.style.color=color==='red'?'#791F1F':color==='blue'?'#0C447C':'#0F6E56';
+  ok.classList.add('show');
+  if(color!=='blue') setTimeout(()=>ok.classList.remove('show'),3000);
+}
+
+async function loadData(){
+  showSyncStatus('Ladataan...', 'blue');
+  try {
+    const res = await fetch(SHEETS_URL + '?action=load&token=' + SECRET_TOKEN);
+    const data = await res.json();
+    if(data.ok){
+      notes={}; visitors={}; events=[]; retket=[]; ryhmat=[]; kmkorvaus=[];
+      data.rows.forEach(r=>{
+        if(r.type==='event') events.push(JSON.parse(r.data));
+        else if(r.type==='retki') retket.push(JSON.parse(r.data));
+        else if(r.type==='ryhma') ryhmat.push(JSON.parse(r.data));
+        else if(r.type==='km') kmkorvaus.push(JSON.parse(r.data));
+        else if(r.type==='note') notes[r.id]=r.data;
+        else if(r.type==='visitor') visitors[r.id]=parseInt(r.data)||0;
+      });
+      showSyncStatus('Ladattu!', 'green');
+    }
+  } catch(e){
+    showSyncStatus('Yhteysvirhe', 'red');
+  }
+  applyLang(); renderCalendar(); renderEvents(); renderRetket(); renderRyhmat(); renderKm();
+}
+
+function saveData(){
+  if(_saveTimeout) clearTimeout(_saveTimeout);
+  _saveTimeout = setTimeout(async ()=>{
+    showSyncStatus('Tallennetaan...', 'blue');
+    const rows=[];
+    Object.entries(notes).forEach(([k,v])=>{ if(v) rows.push({type:'note',id:k,name:'',date:'',time:'',desc:'',data:v}); });
+    Object.entries(visitors).forEach(([k,v])=>{ if(v) rows.push({type:'visitor',id:k,name:'',date:'',time:'',desc:'',data:String(v)}); });
+    events.forEach(e=>rows.push({type:'event',id:String(e.id),name:e.name,date:e.date,time:e.time||'',desc:e.desc||'',data:JSON.stringify(e)}));
+    retket.forEach(r=>rows.push({type:'retki',id:String(r.id),name:r.name,date:r.date,time:r.time||'',desc:r.dest||'',data:JSON.stringify(r)}));
+    ryhmat.forEach(r=>rows.push({type:'ryhma',id:String(r.id),name:r.name,date:'',time:'',desc:'',data:JSON.stringify(r)}));
+    kmkorvaus.forEach(k=>rows.push({type:'km',id:String(k.id),name:k.driver,date:k.date,time:'',desc:k.from+' → '+k.to,data:JSON.stringify(k)}));
+    try {
+      const res = await fetch(SHEETS_URL, {method:'POST', body:JSON.stringify({action:'save',token:SECRET_TOKEN,rows})});
+      const data = await res.json();
+      if(data.ok) showSyncStatus('Tallennettu!', 'green');
+      else showSyncStatus('Tallennusvirhe', 'red');
+    } catch(e){ showSyncStatus('Yhteysvirhe', 'red'); }
+  }, 1000);
+}
+
+function setLang(l,btn){lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyLang();renderCalendar();renderEvents();renderRetket();renderRyhmat();}
+
+function applyLang(){
+  const t=T[lang];
+  document.getElementById('hero-title').textContent=t.title;
+  document.getElementById('hero-sub').textContent=t.sub;
+  document.getElementById('tab-cal-label').textContent=t.tabCal;
+  document.getElementById('tab-ev-label').textContent=t.tabEv;
+  document.getElementById('tab-ret-label').textContent=t.tabRet;
+  document.getElementById('tab-ryhma-label').textContent=t.tabRyhma;
+  document.getElementById('total-label').textContent=t.totalLabel;
+  document.getElementById('add-ev-title').textContent=t.newEv;
+  document.getElementById('lbl-ev-name').textContent=t.lEvName;
+  document.getElementById('lbl-ev-date').textContent=t.lEvDate;
+  document.getElementById('lbl-ev-time').textContent=t.lEvTime;
+  document.getElementById('lbl-ev-desc').textContent=t.lEvDesc;
+  document.getElementById('ev-cancel').textContent=t.cancel;
+  document.getElementById('ev-save').textContent=t.save;
+  document.getElementById('add-ev-label').textContent=t.addEv;
+  document.getElementById('add-ev-area').style.display=isAdmin?'block':'none';
+  document.getElementById('ev-hint').textContent=isAdmin?'':t.evHintGuest;
+  document.getElementById('add-ret-title').textContent=t.newRet;
+  document.getElementById('lbl-ret-name').textContent=t.lRetName;
+  document.getElementById('lbl-ret-date').textContent=t.lRetDate;
+  document.getElementById('lbl-ret-time').textContent=t.lRetTime;
+  document.getElementById('lbl-ret-dest').textContent=t.lRetDest;
+  document.getElementById('ret-cancel').textContent=t.cancel;
+  document.getElementById('ret-save').textContent=t.save;
+  document.getElementById('add-ret-label').textContent=t.addRet;
+  document.getElementById('add-ret-area').style.display=isAdmin?'block':'none';
+  document.getElementById('ret-hint').textContent=isAdmin?'':t.retHintGuest;
+  document.getElementById('add-group-title').textContent=t.newGroup;
+  document.getElementById('lbl-group-name').textContent=t.lGroupName;
+  document.getElementById('lbl-group-persons').textContent=t.addPerson;
+  document.getElementById('group-cancel').textContent=t.cancel;
+  document.getElementById('group-save').textContent=t.save;
+  document.getElementById('ng-firstname').placeholder=t.pFirstName;
+  document.getElementById('ng-lastname').placeholder=t.pLastName;
+  document.getElementById('ng-phone').placeholder=t.pPhone;
+  document.getElementById('add-ryhma-label').textContent=t.addRyhma;
+  document.getElementById('add-ryhma-area').style.display=isAdmin?'block':'none';
+  document.getElementById('ryhma-hint').textContent=isAdmin?'':t.ryhmaHintGuest;
+}
+
+function switchTab(tab){
+  _activeTab = tab;
+  ['cal','ev','ret','ryhma','km'].forEach(id=>{
+    document.getElementById('view-'+id).style.display=tab===id?'block':'none';
+    document.getElementById('tab-'+id).className='tab'+(tab===id?' active':'');
+  });
+}
+
+function saveCurrentInputs(){
+  document.getElementById('cal-grid').querySelectorAll('textarea').forEach(ta=>{if(ta.dataset.date)notes[ta.dataset.date]=ta.value;});
+  document.getElementById('cal-grid').querySelectorAll('.visitor-input').forEach(inp=>{if(inp.dataset.date)visitors[inp.dataset.date]=parseInt(inp.value)||0;});
+}
+
+function updateTotal(){
+  let total=0;const dim=new Date(viewYear,viewMonth+1,0).getDate();
+  for(let d=1;d<=dim;d++){const ds=viewYear+'-'+String(viewMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');total+=visitors[ds]||0;}
+  document.getElementById('total-num').textContent=total;
+  document.getElementById('total-sub').textContent=T[lang].months[viewMonth]+' '+viewYear;
+}
+
+function renderCalendar(){
+  saveCurrentInputs();const t=T[lang];
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  document.getElementById('month-label').textContent=t.months[viewMonth]+' '+viewYear;
+  t.days.forEach(d=>{const h=document.createElement('div');h.className='day-header';h.textContent=d;grid.appendChild(h);});
+  let startDow=new Date(viewYear,viewMonth,1).getDay();startDow=startDow===0?6:startDow-1;
+  const dim=new Date(viewYear,viewMonth+1,0).getDate();
+  const prevDays=new Date(viewYear,viewMonth,0).getDate();
+  const today=new Date();
+  for(let i=0;i<startDow;i++){const c=document.createElement('div');c.className='day-cell other-month';c.innerHTML='<div class="day-num">'+(prevDays-startDow+i+1)+'</div>';grid.appendChild(c);}
+  for(let d=1;d<=dim;d++){
+    const ds=viewYear+'-'+String(viewMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=today.getFullYear()===viewYear&&today.getMonth()===viewMonth&&today.getDate()===d;
+    const cell=document.createElement('div');cell.className='day-cell'+(isToday?' today':'');
+    const numDiv=document.createElement('div');numDiv.className='day-num';numDiv.textContent=d;cell.appendChild(numDiv);
+    events.filter(e=>e.date===ds).forEach(ev=>{const pip=document.createElement('div');pip.className='ev-pip green';pip.textContent=(ev.time?ev.time+' ':'')+ev.name.split('/')[0].trim();cell.appendChild(pip);});
+    retket.filter(r=>r.date===ds).forEach(r=>{const pip=document.createElement('div');pip.className='ev-pip blue';pip.textContent=(r.time?r.time+' ':'')+r.name;cell.appendChild(pip);});
+    const ta=document.createElement('textarea');ta.className='day-note';ta.dataset.date=ds;ta.placeholder=isAdmin?t.placeholder:'';ta.value=notes[ds]||'';ta.disabled=!isAdmin;
+    ta.addEventListener('change',()=>{notes[ds]=ta.value;saveData();});cell.appendChild(ta);
+    const vrow=document.createElement('div');vrow.className='visitor-row';
+    const vl=document.createElement('span');vl.className='visitor-label';vl.textContent=t.visitorLabel;
+    const vi=document.createElement('input');vi.type='number';vi.min='0';vi.className='visitor-input';vi.dataset.date=ds;vi.value=visitors[ds]||'';vi.placeholder='0';vi.disabled=!isAdmin;
+    vi.addEventListener('input',()=>{visitors[ds]=parseInt(vi.value)||0;updateTotal();saveData();});
+    vrow.appendChild(vl);vrow.appendChild(vi);cell.appendChild(vrow);grid.appendChild(cell);
+  }
+  const tc=startDow+dim;const rem=tc%7===0?0:7-tc%7;
+  for(let i=1;i<=rem;i++){const c=document.createElement('div');c.className='day-cell other-month';c.innerHTML='<div class="day-num">'+i+'</div>';grid.appendChild(c);}
+  updateTotal();
+}
+
+function renderEvents(){
+  const t=T[lang];const list=document.getElementById('events-list');list.innerHTML='';
+  const sorted=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+  if(sorted.length===0){list.innerHTML='<p class="no-items">'+t.noEvents+'</p>';return;}
+  sorted.forEach(ev=>{
+    const d=new Date(ev.date+'T12:00:00');const card=document.createElement('div');card.className='event-card';
+    const del=isAdmin?'<button class="del-btn" onclick="deleteEvent('+ev.id+')">&#10005;</button>':'';
+    card.innerHTML='<div class="date-box orange"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+ev.name+'</h3><p>'+ev.desc+'</p>'+(ev.time?'<div class="card-time orange">'+ev.time+'</div>':'')+'</div>'+del;
+    list.appendChild(card);
+  });
+}
+
+function renderRetket(){
+  const t=T[lang];const list=document.getElementById('retki-list');list.innerHTML='';
+  const sorted=[...retket].sort((a,b)=>a.date.localeCompare(b.date));
+  if(sorted.length===0){list.innerHTML='<p class="no-items">'+t.noRetki+'</p>';updateRetTotal();return;}
+  sorted.forEach(r=>{
+    const d=new Date(r.date+'T12:00:00');const persons=r.persons||[];
+    const card=document.createElement('div');card.className='expandable-card';
+    const header=document.createElement('div');header.className='expandable-header';
+    header.onclick=()=>body.classList.toggle('open');
+    const del=isAdmin?'<button class="del-btn" onclick="event.stopPropagation();deleteRetki('+r.id+')" style="margin-top:2px;">&#10005;</button>':'';
+    header.innerHTML='<div class="date-box blue"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+r.name+'</h3><p>'+(r.dest||'')+'</p>'+(r.time?'<div class="card-time blue">'+r.time+'</div>':'')+'<div class="card-count blue">'+persons.length+' '+t.persons+'</div></div>'+del;
+    const body=document.createElement('div');body.className='expandable-body';
+    const pList=document.createElement('div');pList.className='person-list';
+    if(persons.length===0){pList.innerHTML='<p class="no-persons">'+t.noPersons+'</p>';}
+    else{persons.forEach((p,i)=>{const row=document.createElement('div');row.className='person-row';const nm=[p.firstName,p.lastName].filter(Boolean).join(' ');const pd=isAdmin?'<button class="person-del" onclick="deleteRetkiPerson('+r.id+','+i+')">&#10005;</button>':'';row.innerHTML='<span class="person-name">'+(nm||'—')+'</span>'+(p.phone?'<span class="person-phone">'+p.phone+'</span>':'')+pd;pList.appendChild(row);});}
+    body.appendChild(pList);
+    if(isAdmin){const form=document.createElement('div');form.className='add-person-form';const fn=document.createElement('input');fn.type='text';fn.placeholder=t.pFirstName;const ln=document.createElement('input');ln.type='text';ln.placeholder=t.pLastName;const ph=document.createElement('input');ph.type='tel';ph.placeholder=t.pPhone;const ab=document.createElement('button');ab.className='add-person-btn';ab.style.background='#378ADD';ab.textContent='+';ab.onclick=()=>{const f=fn.value.trim(),l=ln.value.trim(),p2=ph.value.trim();if(!f&&!l&&!p2)return;const rx=retket.find(x=>x.id===r.id);if(!rx.persons)rx.persons=[];rx.persons.push({firstName:f,lastName:l,phone:p2});saveData();renderRetket();};form.appendChild(fn);form.appendChild(ln);form.appendChild(ph);form.appendChild(ab);body.appendChild(form);}
+    card.appendChild(header);card.appendChild(body);list.appendChild(card);
+  });
+  updateRetTotal();
+}
+
+function updateRetTotal(){
+  const t=T[lang];const total=retket.reduce((s,r)=>s+(r.persons?r.persons.length:0),0);
+  const bar=document.getElementById('ret-total-bar');bar.style.display=retket.length>0?'flex':'none';
+  document.getElementById('ret-total-num').textContent=total;
+  document.getElementById('ret-total-label').textContent=t.retTotal;
+  document.getElementById('ret-total-sub').textContent=t.retTotalSub;
+}
+
+function renderRyhmat(){
+  const t=T[lang];const list=document.getElementById('ryhma-list');list.innerHTML='';
+  if(ryhmat.length===0){list.innerHTML='<p class="no-items">'+t.noRyhma+'</p>';updateRyhmaTotal();return;}
+  ryhmat.forEach(r=>{
+    const groups=r.groups||[];const totalP=groups.reduce((s,g)=>s+(g.persons||[]).length,0);
+    const card=document.createElement('div');card.className='expandable-card';
+    const header=document.createElement('div');header.className='expandable-header';
+    header.onclick=()=>body.classList.toggle('open');
+    const del=isAdmin?'<button class="del-btn" onclick="event.stopPropagation();deleteRyhma('+r.id+')" style="margin-top:2px;">&#10005;</button>':'';
+    header.innerHTML='<div class="date-box amber"><span class="eday" style="font-size:14px;font-weight:600;">'+r.name.charAt(0).toUpperCase()+'</span></div><div class="card-info"><h3>'+r.name+'</h3><div class="card-count amber">'+groups.length+' '+t.groups+' / '+totalP+' '+t.persons+'</div></div>'+del;
+    const body=document.createElement('div');body.className='expandable-body';
+    groups.forEach((g,gi)=>{
+      const gs=document.createElement('div');gs.className='group-section';
+      const gh=document.createElement('div');gh.className='group-header';gh.style.background='#FAEEDA';
+      const gb=document.createElement('div');gb.className='group-body';
+      const gdel=isAdmin?'<button class="del-btn" onclick="event.stopPropagation();deleteGroup('+r.id+','+gi+')" style="font-size:12px;padding:2px 6px;">&#10005;</button>':'';
+      gh.innerHTML='<span style="font-size:13px;font-weight:500;color:#633806;">'+g.name+'</span><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:#854F0B;">'+(g.persons||[]).length+' '+t.persons+'</span>'+gdel+'</div>';
+      gh.onclick=(e)=>{if(e.target.classList.contains('del-btn')||e.target.closest('.del-btn'))return;gb.style.display=gb.style.display==='block'?'none':'block';};
+      const pl=document.createElement('div');pl.className='person-list';
+      if((g.persons||[]).length===0){pl.innerHTML='<p class="no-persons">'+t.noPersons+'</p>';}
+      else{(g.persons||[]).forEach((p,pi)=>{const row=document.createElement('div');row.className='person-row';const nm=[p.firstName,p.lastName].filter(Boolean).join(' ');const pd=isAdmin?'<button class="person-del" onclick="deleteRyhmaPerson('+r.id+','+gi+','+pi+')">&#10005;</button>':'';row.innerHTML='<span class="person-name">'+(nm||'—')+'</span>'+(p.phone?'<span class="person-phone">'+p.phone+'</span>':'')+pd;pl.appendChild(row);});}
+      gb.appendChild(pl);
+      if(isAdmin){const pf=document.createElement('div');pf.className='add-person-form';const fn=document.createElement('input');fn.type='text';fn.placeholder=t.pFirstName;const ln=document.createElement('input');ln.type='text';ln.placeholder=t.pLastName;const ph=document.createElement('input');ph.type='tel';ph.placeholder=t.pPhone;const ab=document.createElement('button');ab.className='add-person-btn';ab.style.background='#854F0B';ab.textContent='+';ab.onclick=()=>{const f=fn.value.trim(),l=ln.value.trim(),p2=ph.value.trim();if(!f&&!l&&!p2)return;const rx=ryhmat.find(x=>x.id===r.id);if(!rx.groups[gi].persons)rx.groups[gi].persons=[];rx.groups[gi].persons.push({firstName:f,lastName:l,phone:p2});saveData();renderRyhmat();};pf.appendChild(fn);pf.appendChild(ln);pf.appendChild(ph);pf.appendChild(ab);gb.appendChild(pf);}
+      gs.appendChild(gh);gs.appendChild(gb);body.appendChild(gs);
+    });
+    if(isAdmin){const ab=document.createElement('button');ab.className='group-add-btn';ab.style.cssText='background:#FAEEDA;color:#633806;border-color:#EF9F27;';ab.textContent='+ '+t.addGroup;ab.onclick=()=>{currentRyhmaId=r.id;newGroupPersons=[];document.getElementById('new-group-persons').innerHTML='';document.getElementById('group-name').value='';document.getElementById('ng-firstname').value='';document.getElementById('ng-lastname').value='';document.getElementById('ng-phone').value='';openOverlay('add-group-overlay');};body.appendChild(ab);}
+    card.appendChild(header);card.appendChild(body);list.appendChild(card);
+  });
+  updateRyhmaTotal();
+}
+
+function updateRyhmaTotal(){
+  const t=T[lang];let total=0;ryhmat.forEach(r=>{(r.groups||[]).forEach(g=>{total+=(g.persons||[]).length;});});
+  const bar=document.getElementById('ryhma-total-bar');bar.style.display=ryhmat.length>0?'flex':'none';
+  document.getElementById('ryhma-total-num').textContent=total;
+  document.getElementById('ryhma-total-label').textContent=t.ryhmaTotal;
+  document.getElementById('ryhma-total-sub').textContent=t.ryhmaTotalSub;
+}
+
+function changeMonth(dir){saveCurrentInputs();saveData();viewMonth+=dir;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();}
+function openOverlay(id){document.getElementById(id).classList.add('open');}
+function closeOverlay(id){document.getElementById(id).classList.remove('open');}
+
+function addPersonToNewGroup(){const fn=document.getElementById('ng-firstname').value.trim(),ln=document.getElementById('ng-lastname').value.trim(),ph=document.getElementById('ng-phone').value.trim();if(!fn&&!ln&&!ph)return;newGroupPersons.push({firstName:fn,lastName:ln,phone:ph});document.getElementById('ng-firstname').value='';document.getElementById('ng-lastname').value='';document.getElementById('ng-phone').value='';renderNewGroupPersons();}
+function renderNewGroupPersons(){const c=document.getElementById('new-group-persons');c.innerHTML='';newGroupPersons.forEach((p,i)=>{const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;background:#f9f9f7;border-radius:8px;padding:5px 10px;font-size:13px;';const nm=[p.firstName,p.lastName].filter(Boolean).join(' ');row.innerHTML='<span style="flex:1;font-weight:500;">'+(nm||'—')+'</span>'+(p.phone?'<span style="color:#666;font-size:12px;">'+p.phone+'</span>':'')+'<button onclick="removeNewGroupPerson('+i+')" style="background:transparent;border:none;cursor:pointer;color:#ccc;font-size:14px;">&#10005;</button>';c.appendChild(row);});}
+function removeNewGroupPerson(i){newGroupPersons.splice(i,1);renderNewGroupPersons();}
+function closeNewGroupModal(){newGroupPersons=[];document.getElementById('new-group-persons').innerHTML='';document.getElementById('group-name').value='';document.getElementById('ng-firstname').value='';document.getElementById('ng-lastname').value='';document.getElementById('ng-phone').value='';closeOverlay('add-group-overlay');}
+function openAddGroupModal(){newGroupPersons=[];document.getElementById('new-group-persons').innerHTML='';document.getElementById('group-name').value='';document.getElementById('ng-firstname').value='';document.getElementById('ng-lastname').value='';document.getElementById('ng-phone').value='';currentRyhmaId=null;openOverlay('add-group-overlay');}
+function saveGroup(){
+  saveState();
+  const name=document.getElementById('group-name').value.trim();if(!name)return;
+  const persons=[...newGroupPersons];
+  if(currentRyhmaId){const r=ryhmat.find(x=>x.id===currentRyhmaId);if(r){if(!r.groups)r.groups=[];r.groups.push({id:Date.now(),name,persons});}}
+  else{ryhmat.push({id:Date.now(),name,groups:[{id:Date.now()+1,name,persons}]});}
+  saveData();renderRyhmat();closeNewGroupModal();
+}
+
+function saveEvent(){saveState();const name=document.getElementById('ev-name').value.trim(),date=document.getElementById('ev-date').value;if(!name||!date)return;events.push({id:Date.now(),name,date,time:document.getElementById('ev-time').value,desc:document.getElementById('ev-desc').value.trim()});saveData();closeOverlay('add-ev-overlay');renderCalendar();renderEvents();}
+function deleteEvent(id){saveState();events=events.filter(e=>e.id!==id);saveData();renderCalendar();renderEvents();}
+function saveRetki(){saveState();const name=document.getElementById('ret-name').value.trim(),date=document.getElementById('ret-date').value;if(!name||!date)return;retket.push({id:Date.now(),name,date,time:document.getElementById('ret-time').value,dest:document.getElementById('ret-dest').value.trim(),persons:[]});saveData();closeOverlay('add-ret-overlay');renderCalendar();renderRetket();}
+function deleteRetki(id){saveState();retket=retket.filter(r=>r.id!==id);saveData();renderCalendar();renderRetket();}
+function deleteRetkiPerson(rid,i){saveState();const r=retket.find(x=>x.id===rid);if(r){r.persons.splice(i,1);saveData();renderRetket();}}
+function deleteRyhma(id){saveState();ryhmat=ryhmat.filter(r=>r.id!==id);saveData();renderRyhmat();}
+function deleteGroup(rid,gi){saveState();const r=ryhmat.find(x=>x.id===rid);if(r){r.groups.splice(gi,1);saveData();renderRyhmat();}}
+function deleteRyhmaPerson(rid,gi,pi){saveState();const r=ryhmat.find(x=>x.id===rid);if(r&&r.groups[gi]){r.groups[gi].persons.splice(pi,1);saveData();renderRyhmat();}}
+
+function calcKm(km, passengers){
+  const count = passengers.filter(p=>p.trim()).length;
+  return Math.round(((0.55 + 0.04*count)*km)*100)/100;
+}
+
+function updateKmPreview(){
+  const km=parseFloat(document.getElementById('km-km').value)||0;
+  const raw=document.getElementById('km-passengers').value;
+  const passengers=raw?raw.split(',').filter(p=>p.trim()):[];
+  const total=calcKm(km,passengers);
+  const rate=(0.55+0.04*passengers.length).toFixed(2);
+  document.getElementById('km-preview').textContent=
+    km+' km × '+rate+' €/km = '+total.toFixed(2)+' €'+(passengers.length?' ('+passengers.length+' matkustajaa)':'');
+}
+
+function saveKm(){
+  saveState();
+  const driver=document.getElementById('km-driver').value.trim();
+  const date=document.getElementById('km-date').value;
+  const from=document.getElementById('km-from').value.trim();
+  const to=document.getElementById('km-to').value.trim();
+  const km=parseFloat(document.getElementById('km-km').value)||0;
+  const raw=document.getElementById('km-passengers').value;
+  const passengers=raw?raw.split(',').map(p=>p.trim()).filter(Boolean):[];
+  if(!driver||!date||!km)return;
+  const total=calcKm(km,passengers);
+  kmkorvaus.push({id:Date.now(),driver,date,from,to,km,passengers,total});
+  saveData();renderKm();closeOverlay('add-km-overlay');
+  document.getElementById('km-driver').value='';document.getElementById('km-date').value='';
+  document.getElementById('km-from').value='';document.getElementById('km-to').value='';
+  document.getElementById('km-km').value='';document.getElementById('km-passengers').value='';
+  document.getElementById('km-preview').textContent='';
+}
+
+function deleteKm(id){saveState();kmkorvaus=kmkorvaus.filter(k=>k.id!==id);saveData();renderKm();}
+
+function renderKm(){
+  const filterEl=document.getElementById('km-filter');
+  const selectedDriver=filterEl?filterEl.value:'';
+
+  // Şoför listesini güncelle
+  const drivers=[...new Set(kmkorvaus.map(k=>k.driver))].sort();
+  if(filterEl){
+    const prev=filterEl.value;
+    filterEl.innerHTML='<option value="">Kaikki kuljettajat</option>';
+    drivers.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;filterEl.appendChild(o);});
+    filterEl.value=prev;
+  }
+
+  const filtered=selectedDriver?kmkorvaus.filter(k=>k.driver===selectedDriver):kmkorvaus;
+  const sorted=[...filtered].sort((a,b)=>a.date.localeCompare(b.date));
+  const list=document.getElementById('km-list');list.innerHTML='';
+
+  if(sorted.length===0){list.innerHTML='<p class="no-items">Ei matkakorvauksia</p>';}
+  else{
+    sorted.forEach(k=>{
+      const d=new Date(k.date+'T12:00:00');
+      const card=document.createElement('div');card.className='event-card';
+      const del='<button class="del-btn" onclick="deleteKm('+k.id+')">&#10005;</button>';
+      const passengers=k.passengers&&k.passengers.length?'<p style="font-size:12px;color:#666;margin-top:2px;">Matkustajat: '+k.passengers.join(', ')+'</p>':'';
+      card.innerHTML='<div class="date-box orange"><span class="eday">'+d.getDate()+'</span><span class="emon">'+(d.getMonth()+1)+'/'+d.getFullYear()%100+'</span></div>'
+        +'<div class="card-info"><h3>'+k.driver+'</h3>'
+        +'<p>'+k.from+' → '+k.to+'</p>'
+        +passengers
+        +'<div class="card-time orange">'+k.km+' km — '+k.total.toFixed(2)+' €</div>'
+        +'</div>'+del;
+      list.appendChild(card);
+    });
+  }
+
+  const total=filtered.reduce((s,k)=>s+k.total,0);
+  const totalKm=filtered.reduce((s,k)=>s+k.km,0);
+  const bar=document.getElementById('km-total-bar');
+  bar.style.display=filtered.length>0?'flex':'none';
+  document.getElementById('km-total-label').textContent=selectedDriver?selectedDriver+' — korvaukset yhteensä':'Kaikki matkakorvaukset yhteensä';
+  document.getElementById('km-total-sub').textContent=filtered.length+' matkaa, '+totalKm+' km';
+  document.getElementById('km-total-num').textContent=total.toFixed(2)+' €';
+}
+const _history=[];
+function saveState(){
+  _history.push(JSON.stringify({notes,visitors,events,retket,ryhmat,kmkorvaus}));
+  if(_history.length>30)_history.shift();
+}
+function undo(){
+  if(!_history.length)return;
+  const prev=JSON.parse(_history.pop());
+  notes=prev.notes;visitors=prev.visitors;events=prev.events;retket=prev.retket;ryhmat=prev.ryhmat;kmkorvaus=prev.kmkorvaus||[];
+  saveData();renderCalendar();renderEvents();renderRetket();renderRyhmat();renderKm();
+  showSyncStatus('Geri alındı ↩', 'blue');
+}
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}});
+
+loadData();
+
+// Km preview
+['km-km','km-passengers'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateKmPreview);
+});
+
+// Sadece aktif sekmeyi yazdır
+let _activeTab = 'cal';
+window.addEventListener('beforeprint', function() {
+  ['cal','ev','ret','ryhma','km'].forEach(id => {
+    const el = document.getElementById('view-'+id);
+    if(el) el.classList.toggle('print-active', id === _activeTab);
+  });
+});
+window.addEventListener('afterprint', function() {
+  ['cal','ev','ret','ryhma','km'].forEach(id => {
+    const el = document.getElementById('view-'+id);
+    if(el) el.classList.remove('print-active');
+  });
+});
+</script>
+</body>
+</html>
