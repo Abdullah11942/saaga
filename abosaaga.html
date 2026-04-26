@@ -54,10 +54,10 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f3; c
 .ev-pip.green { background: var(--saaga-orange); color: #fff; }
 .ev-pip.blue { background: #378ADD; color: #fff; }
 .day-note { width: 100%; border: none; background: transparent; font-size: 11px; color: #1a1a1a; font-family: inherit; resize: none; padding: 2px 5px 2px; outline: none; line-height: 1.4; flex: 1; }
-.day-note:focus { background: #fdf5f0; }
+.day-note:focus { background: #FEF0E6; }
 .visitor-row { display: flex; align-items: center; gap: 3px; padding: 2px 4px 4px; flex-shrink: 0; }
 .visitor-label { font-size: 10px; color: #aaa; white-space: nowrap; }
-.visitor-input { width: 40px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; padding: 1px 4px; background: #fdf5f0; text-align: center; outline: none; }
+.visitor-input { width: 40px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; padding: 1px 4px; background: #FEF0E6; text-align: center; outline: none; }
 .visitor-input:disabled { opacity: 0.4; }
 .visitor-input:focus { border-color: var(--saaga-orange); }
 
@@ -172,10 +172,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f3; c
       <span class="logo-sub">Monikulttuurikeskus · Kouvola</span>
     </div>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+  <button onclick="openOverlay('settings-overlay')" style="background:transparent;border:1px solid #555;border-radius:8px;padding:4px 10px;cursor:pointer;color:#ccc;font-size:16px;">⚙️</button>
   <div class="lang-group">
     <button class="lang-btn active" onclick="setLang('fi',this)">FI</button>
     <button class="lang-btn" onclick="setLang('en',this)">EN</button>
   </div>
+</div>
 </div>
 
 <div class="hero">
@@ -361,6 +364,73 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f3; c
   </div>
 </div>
 
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settings-overlay">
+  <div class="modal">
+    <h2>⚙️ Asetukset</h2>
+    <label>Nykyinen salasana</label>
+    <input type="password" id="set-old-pw" placeholder="••••••••" />
+    <label>Uusi salasana</label>
+    <input type="password" id="set-new-pw" placeholder="••••••••" />
+    <label>Uusi salasana uudelleen</label>
+    <input type="password" id="set-new-pw2" placeholder="••••••••" />
+    <div id="set-error" style="font-size:12px;color:#791F1F;margin-top:6px;display:none;"></div>
+    <div id="set-ok" style="font-size:12px;color:#0F6E56;margin-top:6px;display:none;">Salasana vaihdettu!</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('settings-overlay');clearSettingsForm()">Peruuta</button>
+      <button class="btn-orange" onclick="changePassword()">Vaihda salasana</button>
+    </div>
+    <div style="margin-top:12px;border-top:1px solid #e5e5e0;padding-top:12px;">
+      <button onclick="lockApp()" style="width:100%;background:#1A1A1A;color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;cursor:pointer;font-weight:500;">🔒 Lukitse sovellus</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:#1A1A1A;z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-size:28px;font-weight:700;color:#E8620A;letter-spacing:3px;">SAAGA</div>
+    <div style="font-size:12px;color:#aaa;margin-top:4px;">Monikulttuurikeskus · Kouvola</div>
+  </div>
+  <div style="background:#fff;border-radius:16px;padding:2rem;width:300px;max-width:90vw;">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:1rem;color:#1A1A1A;">Kirjaudu sisään</h2>
+    <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Salasana</label>
+    <input type="password" id="login-pw" style="width:100%;font-size:14px;border:1px solid #ddd;border-radius:8px;padding:10px;outline:none;margin-bottom:8px;" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    <div id="login-error" style="font-size:12px;color:#791F1F;margin-bottom:8px;display:none;">Väärä salasana</div>
+    <button onclick="doLogin()" style="width:100%;background:#E8620A;color:#fff;border:none;border-radius:8px;padding:11px;font-size:15px;font-weight:600;cursor:pointer;">Kirjaudu sisään</button>
+  </div>
+</div>
+
+<!-- EDIT EVENT MODAL -->
+<div class="overlay" id="edit-ev-overlay">
+  <div class="modal">
+    <h2>Muokkaa tapahtumaa</h2>
+    <label>Tapahtuman nimi</label><input type="text" id="edit-ev-name" />
+    <label>Päivämäärä</label><input type="date" id="edit-ev-date" />
+    <label>Aika</label><input type="time" id="edit-ev-time" />
+    <label>Kuvaus</label><input type="text" id="edit-ev-desc" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('edit-ev-overlay')">Peruuta</button>
+      <button class="btn-orange" onclick="updateEvent()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT RETKI MODAL -->
+<div class="overlay" id="edit-ret-overlay">
+  <div class="modal">
+    <h2>Muokkaa retkeä</h2>
+    <label>Retken nimi</label><input type="text" id="edit-ret-name" />
+    <label>Päivämäärä</label><input type="date" id="edit-ret-date" />
+    <label>Aika</label><input type="time" id="edit-ret-time" />
+    <label>Kohde / Kuvaus</label><input type="text" id="edit-ret-dest" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeOverlay('edit-ret-overlay')">Peruuta</button>
+      <button class="btn-blue" onclick="updateRetki()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const T = {
   fi: {
@@ -425,15 +495,82 @@ const T = {
   }
 };
 
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzXUzA8ce-SX16hq7SMEZzwg2EP6nNgNdvuL20BCjsX4SdquQ348crSQ728sJWftN9gYA/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw9_SUIRaXHR8HdN9fmr3DNJsACAMxm4i_Kf-P0GhoJJoYzpC63h73JT5x4CQWJo2K6lw/exec';
 const SECRET_TOKEN = 'saaga-kouvola-2024-xK9m';
 
 let lang='fi';
-const isAdmin=true;
+const APP_PASSWORD = 'saaga2024';
+let isAdmin = false;
+let _editEvId = null, _editRetId = null;
 let viewYear=new Date().getFullYear(), viewMonth=new Date().getMonth();
 let notes={}, visitors={}, events=[], retket=[], ryhmat=[], kmkorvaus=[];
 let currentRyhmaId=null, newGroupPersons=[];
 let _saveTimeout=null;
+
+function lockApp(){
+  localStorage.removeItem('saaga-login');
+  isAdmin = false;
+  closeOverlay('settings-overlay');
+  clearSettingsForm();
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-screen').style.display='flex';
+}
+function changePassword(){
+  const oldPw = document.getElementById('set-old-pw').value;
+  const newPw = document.getElementById('set-new-pw').value;
+  const newPw2 = document.getElementById('set-new-pw2').value;
+  const err = document.getElementById('set-error');
+  const ok = document.getElementById('set-ok');
+  err.style.display='none'; ok.style.display='none';
+  if(oldPw !== APP_PASSWORD && oldPw !== localStorage.getItem('saaga-login')){
+    err.textContent='Väärä nykyinen salasana'; err.style.display='block'; return;
+  }
+  if(newPw.length < 4){
+    err.textContent='Salasana on liian lyhyt (min. 4 merkkiä)'; err.style.display='block'; return;
+  }
+  if(newPw !== newPw2){
+    err.textContent='Salasanat eivät täsmää'; err.style.display='block'; return;
+  }
+  localStorage.setItem('saaga-login', newPw);
+  window._dynPw = newPw;
+  window._sheetsPw = newPw;
+  // Save to Sheets
+  fetch(SHEETS_URL, {method:'POST', body:JSON.stringify({action:'setpw', token:SECRET_TOKEN, pw:newPw})});
+  ok.style.display='block';
+  setTimeout(()=>{ closeOverlay('settings-overlay'); clearSettingsForm(); }, 1500);
+}
+function clearSettingsForm(){
+  ['set-old-pw','set-new-pw','set-new-pw2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('set-error').style.display='none';
+  document.getElementById('set-ok').style.display='none';
+}
+async function checkLogin(){
+  // Fetch password from Sheets
+  try {
+    const res = await fetch(SHEETS_URL + '?action=getpw&token=' + SECRET_TOKEN);
+    const data = await res.json();
+    if(data.ok && data.pw) window._sheetsPw = data.pw;
+  } catch(e){}
+  const ls = localStorage.getItem('saaga-login');
+  const validPw = window._sheetsPw || APP_PASSWORD;
+  if(ls === validPw){ window._dynPw = validPw; isAdmin = true; startApp(); }
+  else { const s=document.getElementById('login-screen'); s.style.display='flex'; }
+}
+function doLogin(){
+  const pw = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-error');
+  if(pw === (window._sheetsPw || window._dynPw || APP_PASSWORD)){
+    localStorage.setItem('saaga-login', pw);
+    isAdmin = true;
+    document.getElementById('login-screen').style.display='none';
+    startApp();
+  } else {
+    err.style.display='block';
+    document.getElementById('login-pw').value='';
+    setTimeout(()=>err.style.display='none', 2000);
+  }
+}
+function startApp(){ loadData(); }
 
 function showSyncStatus(msg, color){
   const ok=document.getElementById('save-ok');
@@ -587,8 +724,9 @@ function renderEvents(){
   if(sorted.length===0){list.innerHTML='<p class="no-items">'+t.noEvents+'</p>';return;}
   sorted.forEach(ev=>{
     const d=new Date(ev.date+'T12:00:00');const card=document.createElement('div');card.className='event-card';
-    const del=isAdmin?'<button class="del-btn" onclick="deleteEvent('+ev.id+')">&#10005;</button>':'';
-    card.innerHTML='<div class="date-box orange"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+ev.name+'</h3><p>'+ev.desc+'</p>'+(ev.time?'<div class="card-time orange">'+ev.time+'</div>':'')+'</div>'+del;
+    const del=isAdmin?'<button class="del-btn" onclick="deleteEvent('+ev.id+')" style="margin-left:4px;">&#10005;</button>':'';
+    const edit=isAdmin?'<button class="del-btn" onclick="openEditEvent('+ev.id+')" style="margin-left:4px;">✏️</button>':'';
+    card.innerHTML='<div class="date-box orange"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+ev.name+'</h3><p>'+ev.desc+'</p>'+(ev.time?'<div class="card-time orange">'+ev.time+'</div>':'')+'</div><div style="display:flex;flex-direction:column;gap:4px;">'+edit+del+'</div>';
     list.appendChild(card);
   });
 }
@@ -603,7 +741,8 @@ function renderRetket(){
     const header=document.createElement('div');header.className='expandable-header';
     header.onclick=()=>body.classList.toggle('open');
     const del=isAdmin?'<button class="del-btn" onclick="event.stopPropagation();deleteRetki('+r.id+')" style="margin-top:2px;">&#10005;</button>':'';
-    header.innerHTML='<div class="date-box blue"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+r.name+'</h3><p>'+(r.dest||'')+'</p>'+(r.time?'<div class="card-time blue">'+r.time+'</div>':'')+'<div class="card-count blue">'+persons.length+' '+t.persons+'</div></div>'+del;
+    const edit=isAdmin?'<button class="del-btn" onclick="event.stopPropagation();openEditRetki('+r.id+')" style="margin-top:2px;">✏️</button>':'';
+    header.innerHTML='<div class="date-box blue"><span class="eday">'+d.getDate()+'</span><span class="emon">'+t.shortMonths[d.getMonth()]+'</span></div><div class="card-info"><h3>'+r.name+'</h3><p>'+(r.dest||'')+'</p>'+(r.time?'<div class="card-time blue">'+r.time+'</div>':'')+'<div class="card-count blue">'+persons.length+' '+t.persons+'</div></div><div style="display:flex;flex-direction:column;gap:4px;">'+edit+del+'</div>';
     const body=document.createElement('div');body.className='expandable-body';
     const pList=document.createElement('div');pList.className='person-list';
     if(persons.length===0){pList.innerHTML='<p class="no-persons">'+t.noPersons+'</p>';}
@@ -767,6 +906,43 @@ function renderKm(){
   document.getElementById('km-total-sub').textContent=filtered.length+' matkaa, '+totalKm+' km';
   document.getElementById('km-total-num').textContent=total.toFixed(2)+' €';
 }
+
+function openEditEvent(id){
+  const ev=events.find(e=>e.id===id);if(!ev)return;
+  _editEvId=id;
+  document.getElementById('edit-ev-name').value=ev.name;
+  document.getElementById('edit-ev-date').value=ev.date;
+  document.getElementById('edit-ev-time').value=ev.time||'';
+  document.getElementById('edit-ev-desc').value=ev.desc||'';
+  openOverlay('edit-ev-overlay');
+}
+function updateEvent(){
+  const ev=events.find(e=>e.id===_editEvId);if(!ev)return;
+  saveState();
+  ev.name=document.getElementById('edit-ev-name').value.trim();
+  ev.date=document.getElementById('edit-ev-date').value;
+  ev.time=document.getElementById('edit-ev-time').value;
+  ev.desc=document.getElementById('edit-ev-desc').value.trim();
+  saveData();closeOverlay('edit-ev-overlay');renderCalendar();renderEvents();
+}
+function openEditRetki(id){
+  const r=retket.find(x=>x.id===id);if(!r)return;
+  _editRetId=id;
+  document.getElementById('edit-ret-name').value=r.name;
+  document.getElementById('edit-ret-date').value=r.date;
+  document.getElementById('edit-ret-time').value=r.time||'';
+  document.getElementById('edit-ret-dest').value=r.dest||'';
+  openOverlay('edit-ret-overlay');
+}
+function updateRetki(){
+  const r=retket.find(x=>x.id===_editRetId);if(!r)return;
+  saveState();
+  r.name=document.getElementById('edit-ret-name').value.trim();
+  r.date=document.getElementById('edit-ret-date').value;
+  r.time=document.getElementById('edit-ret-time').value;
+  r.dest=document.getElementById('edit-ret-dest').value.trim();
+  saveData();closeOverlay('edit-ret-overlay');renderCalendar();renderRetket();
+}
 const _history=[];
 function saveState(){
   _history.push(JSON.stringify({notes,visitors,events,retket,ryhmat,kmkorvaus}));
@@ -781,7 +957,7 @@ function undo(){
 }
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}});
 
-loadData();
+checkLogin();
 
 // Km preview
 ['km-km','km-passengers'].forEach(id=>{
